@@ -4,7 +4,7 @@ OBJS = src/*.cpp
 
 CC = g++
 
-OBJ_NAME = bin/Debug/ECI
+OBJ_NAME = bin/Debug/ECI_Linux
 TEST_NAME = bin/Debug/test
 
 build:
