@@ -3,79 +3,70 @@
 #include <map>
 #include <vector>
 
-#define MAX_SIZE 256
+#define MAX_SIZE 4096
 
 using namespace std;
 
-map<string, int> codeT;
-int codeC = 0;
-
-string sm = "aababcabcdabcdeabcdefabcdefgabcdefgh";
-// vector<int> o;
-string o = "";
-string s = "";
-
-void printTable()
+void compress()
 {
-    int c = 0;
-    for (auto i = codeT.cbegin(); i != codeT.cend(); i++)
-    {
+    // LZW Dictionary
+    map<string, int> codeTable;
+    int codeC = 0; // Code Count for LZW Dict
 
-        cout << '[' << (*i).first << ']' << (*i).second << " | ";
+    //Sample string
+    string sm = "AABAHSJCABABABA";
 
-        if (++c % 10 == 0)
-            cout << '\n';
-    }
-}
-
-int main()
-{
-    ifstream file("F:\\a.txt", ios::binary);
-    cout << "Hello\n";
-    for (int i = 0; i < 256; i++)
-    {
-        s = i;
-        codeT[s] = i;
-    }
-    codeC = 256;
+    //output data
+    vector<uint16_t> output;
 
     string encodeStr = "";
+
+    // Encoded String + next char
+    string strPCode = "";
+
+    // Initizalize Dictionary
+    for (int i = 0; i < 256; i++)
+    {
+        codeTable[string(1, (char)i)] = i;
+    }
+    codeC = 257; // 256 is for EOF marker
+
     //step 2
     for (int i = 0; i < sm.size(); i++)
     {
-        s = encodeStr + sm[i];
+        strPCode = encodeStr + sm[i];
 
-        if (codeT.count(s) > 0)
-            encodeStr = s;
+        if (codeTable.count(strPCode) > 0)
+            encodeStr = strPCode;
         else
         {
-            char q = (char)codeT[encodeStr];
-            o += q;
+            output.push_back(codeTable[encodeStr]);
 
             if (codeC < MAX_SIZE)
             {
-                cout << codeC << '\n';
-                codeT[s] = codeC++;
+                codeTable[strPCode] = codeC++;
             }
 
             encodeStr = sm[i];
         }
     }
 
-    if (codeT.count(encodeStr) > 0)
-        o += codeT[encodeStr];
+    if (codeTable.count(encodeStr) > 0)
+        output.push_back(codeTable[encodeStr]);
     else
-        o += codeC++;
+        output.push_back(codeC++);
 
-    cout << sm.size() << " " << o.size() << " " << codeT.size() << '\n';
+    cout << "Original Size   : " << sm.size() << "\n";
+    cout << "Compressed Size : " << output.size() << "\n";
+    cout << "Percentage      : " << 1 - ((double)output.size() / (double)sm.size()) << "%\n";
+}
 
-    cout << "=== Original ====\n";
-    for (int i = 0; i < sm.size(); i++)
-        cout << (int)sm[i] << " ";
+int main()
+{
 
-    cout << "\n=== Compressed ====\n";
-    for (int i = 0; i < o.size(); i++)
-        cout << (int)o[i] << " ";
+    // ifstream file("F:\\a.txt", ios::binary);
+    cout << "Hello😍\n";
 
+    compress();
     return 0;
 }
