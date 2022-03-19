@@ -19,7 +19,8 @@ struct ECIImg
 {
     int w;          // Width of Img
     int h;          // Height of Img
-    uint32_t *data; // Raw Rgba data of Img
+    int channels;   // numbers of channeles
+    uint8_t *data; // Raw Rgba data of Img
 };
 
 class ECI

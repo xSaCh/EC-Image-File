@@ -8,10 +8,10 @@ OBJ_NAME = bin/Debug/ECI_Linux
 TEST_NAME = bin/Debug/test
 
 build:
-	$(CC) -static-libstdc++ $(OBJS) -o $(OBJ_NAME)
+	$(CC) -g -static-libstdc++ $(OBJS) -o $(OBJ_NAME)
 
 test:
-	$(CC) -static-libstdc++ $(OBJS) -o $(TEST_NAME)
+	$(CC) -g -static-libstdc++ $(OBJS) -o $(TEST_NAME)
 
 run:
 	$(OBJ_NAME).exe

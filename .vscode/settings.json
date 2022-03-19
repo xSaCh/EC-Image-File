@@ -61,6 +61,8 @@
         "xloctime": "cpp",
         "xtree": "cpp",
         "sstream": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "array": "cpp",
+        "string_view": "cpp"
     }
 }
