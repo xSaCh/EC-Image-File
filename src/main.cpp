@@ -46,14 +46,8 @@ int main(int argc, char *args[])
             int n = atoi(args[3]);
             string *numImgs = new string[n];
 
-#ifdef DEBUG
-            cout << "Imgs Files are: \n";
             for (int i = 4; i < 4 + n; i++)
-            {
                 numImgs[i - 4] = args[i];
-                cout << numImgs[i - 4] << '\n';
-            }
-#endif
 
             ECI *newEl = WriteEl(n, numImgs, outFile);
         }
@@ -79,7 +73,7 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile)
     for (int nI = 0; nI < imgNum; nI++)
     {
         cout << "LOADING " << imgsPath[nI] << "...\n";
-        uint8_t *da = stbi_load(imgsPath[nI].c_str(), &(el->imgs[nI].w), &(el->imgs[nI].h), &(el->imgs[nI].channels), 0);
+        int data = stbi_info(imgsPath[nI].c_str(), &(el->imgs[nI].w), &(el->imgs[nI].h), &(el->imgs[nI].channels));
 
         ifstream refil(imgsPath[nI].c_str(), ios::binary | ios::ate);
 
