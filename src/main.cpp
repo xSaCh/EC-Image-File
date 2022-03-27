@@ -19,12 +19,7 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile);
 
 int main(int argc, char *args[])
 {
-    for (int i = 1; i < argc; i++)
-    {
-        cout << i << " : " << args[i] << '\n';
-    }
-
-    if (argc >= 4)
+    if (argc > 4)
     {
         if (strcmp(args[1], "-r") == 0)
         {
@@ -41,8 +36,6 @@ int main(int argc, char *args[])
                 return 1;
             }
 
-            cout << "Size of " << pos << ": " << nn->w << '\n';
-
             ofstream f(outFile, ios::binary);
             f.write((char *)nn->data, head.sizes[pos]);
             f.close();
@@ -53,12 +46,14 @@ int main(int argc, char *args[])
             int n = atoi(args[3]);
             string *numImgs = new string[n];
 
+#ifdef DEBUG
             cout << "Imgs Files are: \n";
             for (int i = 4; i < 4 + n; i++)
             {
                 numImgs[i - 4] = args[i];
                 cout << numImgs[i - 4] << '\n';
             }
+#endif
 
             ECI *newEl = WriteEl(n, numImgs, outFile);
         }

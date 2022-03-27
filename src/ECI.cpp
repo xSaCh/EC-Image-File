@@ -35,7 +35,6 @@ ECI *ECI::Read(const char *fileName)
     // Read all images
     for (int i = 0; i < newEl->header.numbers; i++)
     {
-        std::cout << "OFF_" << i << "_: " << fil.tellg() << '\n';
         newEl->imgs[i].data = (uint8_t *)malloc(sizeof(uint8_t) * newEl->header.sizes[i]);
 
         fil.read((char *)&(newEl->imgs[i].w), sizeof(newEl->imgs[i].w));
@@ -69,7 +68,6 @@ ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead)
     for (int i = 0; i < pos; i++)
         offset += sizeof(ECIImg) - sizeof(newImg->data) + (newHead->sizes[i] * sizeof(uint8_t));
 
-    std::cout << "CUR: " << fil.tellg() << "OFF: " << offset << '\n';
     fil.seekg(offset, std::ios::cur); // 8 is offset for width and height
 
     newImg->data = (uint8_t *)malloc(sizeof(uint8_t) * newHead->sizes[pos]);
@@ -81,17 +79,4 @@ ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead)
 
     fil.close();
     return newImg;
-}
-
-uint32_t rgb(int r, int g, int b, int a = 255) { return (r << 24) | (g << 16) | (b << 8) | a; }
-
-char *intToRgba(const uint32_t val)
-{
-    static char a[4] = {0};
-    a[0] = (val >> 24) & 0xff;
-    a[1] = (val >> 16) & 0xff;
-    a[2] = (val >> 8) & 0xff;
-    a[3] = (val)&0xff;
-
-    return a;
 }
