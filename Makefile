@@ -4,14 +4,17 @@ OBJS = src/*.cpp
 
 CC = g++
 
-OBJ_NAME = bin/Debug/ECI_Linux
+OBJ_NAME = bin/Debug/GIV
 TEST_NAME = bin/Debug/test
 
 build:
-	$(CC) -g -static-libstdc++ $(OBJS) -o $(OBJ_NAME)
+	$(CC) -g $(OBJS) -o $(OBJ_NAME)
 
-test:
-	$(CC) -g -static-libstdc++ $(OBJS) -o $(TEST_NAME)
+release:
+	$(CC) $(OBJS) -o $(OBJ_NAME)
+
+buildComp:
+	$(CC) -g src/compression/*.cpp -o comp
 
 run:
 	$(OBJ_NAME).exe

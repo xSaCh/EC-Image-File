@@ -17,9 +17,9 @@ struct ECIHeader
 
 struct ECIImg
 {
-    int w;          // Width of Img
-    int h;          // Height of Img
-    int channels;   // numbers of channeles
+    int w;         // Width of Img
+    int h;         // Height of Img
+    int channels;  // numbers of channeles
     uint8_t *data; // Raw Rgba data of Img
 };
 
@@ -28,7 +28,7 @@ class ECI
 public:
     void Write(const char *fileName);
     static ECI *Read(const char *fileName);
-    static ECIImg *ReadAt(const char *fileName, int pos);
+    static ECIImg *ReadAt(const char *fileName, int pos, ECIHeader *newHead);
     ECIHeader header;
     ECIImg *imgs;
 };

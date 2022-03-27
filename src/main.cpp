@@ -33,8 +33,8 @@ int main(int argc, char *args[])
             char *outFile = args[4];
 
             //Read  args[3]
-
-            ECIImg *nn = ECI::ReadAt(inpFile, pos);
+            ECIHeader head;
+            ECIImg *nn = ECI::ReadAt(inpFile, pos, &head);
             if (nn == NULL)
             {
                 printf("Input file path doesn't exists.\n");
@@ -43,21 +43,8 @@ int main(int argc, char *args[])
 
             cout << "Size of " << pos << ": " << nn->w << '\n';
 
-            // uint8_t *rawData = new uint8_t[nn->w * nn->h * 4];
-
-            // // Convert single rgba value to seperated rgba value
-            // for (int i = 0; i < nn->w * nn->h * 4; i += 4)
-            // {
-            //     char *tD = intToRgba(nn->data[i / 4]);
-            //     rawData[i] = tD[0];
-            //     rawData[i + 1] = tD[1];
-            //     rawData[i + 2] = tD[2];
-            //     rawData[i + 3] = tD[3];
-            // }
-
-            // stbi_write_jpg(outFile, nn->w, nn->h, 4, rawData, 100);
             ofstream f(outFile, ios::binary);
-            f << nn->data;
+            f.write((char *)nn->data, head.sizes[pos]);
             f.close();
         }
         else if (strcmp(args[1], "-w") == 0)
@@ -66,6 +53,7 @@ int main(int argc, char *args[])
             int n = atoi(args[3]);
             string *numImgs = new string[n];
 
+            cout << "Imgs Files are: \n";
             for (int i = 4; i < 4 + n; i++)
             {
                 numImgs[i - 4] = args[i];
@@ -95,25 +83,19 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile)
 
     for (int nI = 0; nI < imgNum; nI++)
     {
+        cout << "LOADING " << imgsPath[nI] << "...\n";
         uint8_t *da = stbi_load(imgsPath[nI].c_str(), &(el->imgs[nI].w), &(el->imgs[nI].h), &(el->imgs[nI].channels), 0);
 
-        el->imgs[nI].data = da;
-        // cout << "WW:" << sizeof(el->imgs[nI].data) << ":" << da[5] << '\n';
+        ifstream refil(imgsPath[nI].c_str(), ios::binary | ios::ate);
 
-        stbi_write_jpg_("F:\\test.jpg", el->imgs[nI].w, el->imgs[nI].h, el->imgs[nI].channels, (void *)da, 80);
+        auto siz = refil.tellg();
+        refil.seekg(0, ios::beg);
+        uint8_t *d = (uint8_t *)malloc(sizeof(uint8_t) * siz);
+        refil.read((char *)d, siz);
+        refil.close();
 
-        el->header.sizes[nI] = el->imgs[nI].w * el->imgs[nI].h;
-        uint32_t *r = new uint32_t[el->header.sizes[nI]];
-
-        int chnl = el->imgs[nI].channels;
-        for (int i = 0; i < el->header.sizes[nI]; i++)
-        {
-            if (chnl == 4)
-                r[i] = rgb(da[i * 4], da[(i * 4) + 1], da[(i * 4) + 2], da[(i * 4) + 3]);
-            else if (chnl == 3)
-                r[i] = rgb(da[i * 3], da[(i * 3) + 1], da[(i * 3) + 2], 255);
-        }
-        cout << "WW:" << sizeof(el->imgs[nI].data) << ":" << da[5] << '\n';
+        el->imgs[nI].data = d;
+        el->header.sizes[nI] = siz;
     }
     el->Write(outFile);
     return el;

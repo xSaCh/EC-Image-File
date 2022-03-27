@@ -14,7 +14,7 @@ void ECI::Write(const char *fileName)
         fil.write((char *)&(imgs[i].h), sizeof(imgs[i].h));
         fil.write((char *)&(imgs[i].channels), sizeof(imgs[i].channels));
         // fil.write((char *)(imgs[i].data), sizeof(imgs[i].data) * header.sizes[i]);
-        fil.write((char *)(imgs[i].data), sizeof(imgs[i].data[0]) * imgs[i].channels * header.sizes[i]);
+        fil.write((char *)(imgs[i].data), sizeof(imgs[i].data[0]) * header.sizes[i]);
     }
     fil.close();
 }
@@ -35,20 +35,21 @@ ECI *ECI::Read(const char *fileName)
     // Read all images
     for (int i = 0; i < newEl->header.numbers; i++)
     {
+        std::cout << "OFF_" << i << "_: " << fil.tellg() << '\n';
         newEl->imgs[i].data = (uint8_t *)malloc(sizeof(uint8_t) * newEl->header.sizes[i]);
 
         fil.read((char *)&(newEl->imgs[i].w), sizeof(newEl->imgs[i].w));
         fil.read((char *)&(newEl->imgs[i].h), sizeof(newEl->imgs[i].h));
         fil.read((char *)&(newEl->imgs[i].channels), sizeof(newEl->imgs[i].channels));
-        fil.read((char *)(newEl->imgs[i].data), sizeof(newEl->imgs[i].data[0]) * newEl->imgs[i].channels * newEl->header.sizes[i]);
+        fil.read((char *)(newEl->imgs[i].data), sizeof(newEl->imgs[i].data[0]) * newEl->header.sizes[i]);
     }
 
     fil.close();
     return newEl;
 }
-ECIImg *ECI::ReadAt(const char *fileName, int pos)
+ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead)
 {
-    ECIHeader *newHead = (ECIHeader *)malloc(sizeof(ECIHeader));
+    // ECIHeader *newHead = (ECIHeader *)malloc(sizeof(ECIHeader));
     std::ifstream fil(fileName, std::ios::binary);
 
     // Read number of images
@@ -66,8 +67,9 @@ ECIImg *ECI::ReadAt(const char *fileName, int pos)
     // Read all images
     int offset = 0;
     for (int i = 0; i < pos; i++)
-        offset += 8 + (newHead->sizes[i] * sizeof(uint8_t));
+        offset += sizeof(ECIImg) - sizeof(newImg->data) + (newHead->sizes[i] * sizeof(uint8_t));
 
+    std::cout << "CUR: " << fil.tellg() << "OFF: " << offset << '\n';
     fil.seekg(offset, std::ios::cur); // 8 is offset for width and height
 
     newImg->data = (uint8_t *)malloc(sizeof(uint8_t) * newHead->sizes[pos]);
@@ -75,7 +77,7 @@ ECIImg *ECI::ReadAt(const char *fileName, int pos)
     fil.read((char *)&(newImg->w), sizeof(newImg->w));
     fil.read((char *)&(newImg->h), sizeof(newImg->h));
     fil.read((char *)&(newImg->channels), sizeof(newImg->channels));
-    fil.read((char *)(newImg->data), sizeof(newImg->data) * newHead->sizes[pos]);
+    fil.read((char *)(newImg->data), sizeof(newImg->data[0]) * newHead->sizes[pos]);
 
     fil.close();
     return newImg;
