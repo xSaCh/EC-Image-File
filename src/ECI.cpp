@@ -9,6 +9,9 @@ void ECI::Write(const char *fileName)
     fil.write((char *)(header.sizes), sizeof(header.sizes) * header.numbers);
 
     for (int i = 0; i < header.numbers; i++)
+        fil.write(header.imgNames[i].c_str(), header.imgNames[i].length() + 1);
+
+    for (int i = 0; i < header.numbers; i++)
     {
         fil.write((char *)&(imgs[i].w), sizeof(imgs[i].w));
         fil.write((char *)&(imgs[i].h), sizeof(imgs[i].h));
@@ -19,49 +22,37 @@ void ECI::Write(const char *fileName)
     fil.close();
 }
 
-ECI *ECI::Read(const char *fileName)
+ECI *ECI::Read(const char *fileName, bool withData)
 {
     ECI *newEl = (ECI *)malloc(sizeof(ECI));
     std::ifstream fil(fileName, std::ios::binary);
 
-    // Read number of images
-    fil.read((char *)&(newEl->header.numbers), sizeof(newEl->header.numbers));
+    ECI::ReadHeader(&fil, &newEl->header);
 
     newEl->imgs = (ECIImg *)malloc(sizeof(ECIImg) * newEl->header.numbers);
-    newEl->header.sizes = (uint32_t *)malloc(sizeof(uint32_t) * newEl->header.numbers);
-    // Read sizes of images
-    fil.read((char *)(newEl->header.sizes), sizeof(newEl->header.sizes) * newEl->header.numbers);
-
     // Read all images
     for (int i = 0; i < newEl->header.numbers; i++)
     {
         newEl->imgs[i].data = (uint8_t *)malloc(sizeof(uint8_t) * newEl->header.sizes[i]);
 
-        fil.read((char *)&(newEl->imgs[i].w), sizeof(newEl->imgs[i].w));
-        fil.read((char *)&(newEl->imgs[i].h), sizeof(newEl->imgs[i].h));
-        fil.read((char *)&(newEl->imgs[i].channels), sizeof(newEl->imgs[i].channels));
-        fil.read((char *)(newEl->imgs[i].data), sizeof(newEl->imgs[i].data[0]) * newEl->header.sizes[i]);
+        ECI::ReadImg(&fil, &(newEl->imgs[i]), newEl->header.sizes[i], withData);
     }
 
     fil.close();
     return newEl;
 }
-ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead)
+
+ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead, bool withData)
 {
     // ECIHeader *newHead = (ECIHeader *)malloc(sizeof(ECIHeader));
     std::ifstream fil(fileName, std::ios::binary);
 
-    // Read number of images
-    fil.read((char *)&(newHead->numbers), sizeof(newHead->numbers));
+    ECI::ReadHeader(&fil, newHead);
 
     if (pos >= newHead->numbers)
         return NULL;
 
     ECIImg *newImg = (ECIImg *)malloc(sizeof(ECIImg) * newHead->numbers);
-    newHead->sizes = (uint32_t *)malloc(sizeof(uint32_t) * newHead->numbers);
-
-    // Read sizes of images
-    fil.read((char *)(newHead->sizes), sizeof(newHead->sizes) * newHead->numbers);
 
     // Read all images
     int offset = 0;
@@ -72,11 +63,41 @@ ECIImg *ECI::ReadAt(const char *fileName, int pos, ECIHeader *newHead)
 
     newImg->data = (uint8_t *)malloc(sizeof(uint8_t) * newHead->sizes[pos]);
 
-    fil.read((char *)&(newImg->w), sizeof(newImg->w));
-    fil.read((char *)&(newImg->h), sizeof(newImg->h));
-    fil.read((char *)&(newImg->channels), sizeof(newImg->channels));
-    fil.read((char *)(newImg->data), sizeof(newImg->data[0]) * newHead->sizes[pos]);
-
+    ECI::ReadImg(&fil, newImg, newHead->sizes[pos], withData);
     fil.close();
     return newImg;
+}
+
+void ECI::ReadImg(std::ifstream *fil, ECIImg *img, uint32_t filsize, bool withData)
+{
+    fil->read((char *)&(img->w), sizeof(img->w));
+    fil->read((char *)&(img->h), sizeof(img->h));
+    fil->read((char *)&(img->channels), sizeof(img->channels));
+
+    //If data is required then read it or skip that data
+    if (withData)
+        fil->read((char *)(img->data), filsize);
+    else
+        fil->seekg(filsize, std::ios::cur);
+}
+
+void ECI::ReadHeader(std::ifstream *fil, ECIHeader *header)
+{
+    fil->read((char *)&(header->numbers), sizeof(header->numbers));
+
+    header->sizes = (uint32_t *)malloc(sizeof(uint32_t) * header->numbers);
+    header->imgNames = (std::string *)malloc(sizeof(std::string) * header->numbers);
+
+    // Read sizes of images
+    fil->read((char *)(header->sizes), sizeof(header->sizes) * header->numbers);
+
+    char c;
+    for (int i = 0; i < header->numbers; i++)
+    {
+        new (header->imgNames + i) std::string("");
+        while (fil->get(c) && c != '\0')
+        {
+            header->imgNames[i].push_back(c);
+        }
+    }
 }

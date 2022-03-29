@@ -13,6 +13,7 @@ struct ECIHeader
 {
     int numbers;     // Number of imgs in file
     uint32_t *sizes; // Sizes of each img
+    std::string *imgNames;
 };
 
 struct ECIImg
@@ -20,15 +21,17 @@ struct ECIImg
     int w;         // Width of Img
     int h;         // Height of Img
     int channels;  // numbers of channeles
-    uint8_t *data; // Raw Rgba data of Img
+    uint8_t *data; // Raw JPG data of Img
 };
 
 class ECI
 {
 public:
     void Write(const char *fileName);
-    static ECI *Read(const char *fileName);
-    static ECIImg *ReadAt(const char *fileName, int pos, ECIHeader *newHead);
+    static ECI *Read(const char *fileName, bool withData = true);
+    static ECIImg *ReadAt(const char *fileName, int pos, ECIHeader *newHead, bool withData = true);
+    static void ReadImg(std::ifstream *fil, ECIImg *img, uint32_t filsize, bool withData = true);
+    static void ReadHeader(std::ifstream *fil, ECIHeader *header);
     ECIHeader header;
     ECIImg *imgs;
 };
