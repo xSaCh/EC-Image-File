@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 #include "ECI.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -22,6 +23,7 @@ ECIImg img[2];
 // EL el;
 ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile);
 uint8_t *ImgResizeData(const uint8_t *img_data, const uint32_t imgSize);
+string fileSizeToName(const uint32_t fileSize);
 
 int main(int argc, char *args[])
 {
@@ -42,6 +44,7 @@ int main(int argc, char *args[])
                 return 1;
             }
 
+            cout << head.imgNames[0] << '\n';
             ofstream f(outFile, ios::binary);
             f.write((char *)nn->data, head.sizes[pos]);
             f.close();
@@ -65,6 +68,20 @@ int main(int argc, char *args[])
 
             float scale = (RESIZE_WIDTH / (float)nn->w);
             stbi_write_jpg(((string) "resize_" + outFile).c_str(), nn->w * scale, nn->h * scale, nn->channels, reData, 50);
+        }
+        else if (strcmp(args[1], "-f") == 0)
+        {
+            char *inpFile = args[2];
+            int pos = atoi(args[3]);
+            char *outFile = args[4];
+
+            ECI *eci = ECI::Read(inpFile, true);
+            for (int i = 0; i < eci->header.numbers; i++)
+            {
+                string s = fileSizeToName(eci->header.sizes[i]);
+                printf("%i) %s = W:%i H:%i C:%i Size:%s\n", i, eci->header.imgNames[i].c_str(), eci->imgs[i].w,
+                       eci->imgs[i].h, eci->imgs[i].channels, s.c_str());
+            }
         }
         else if (strcmp(args[1], "-w") == 0)
         {
@@ -94,6 +111,10 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile)
     ECI *el = (ECI *)malloc(sizeof(ECI));
     el->header.numbers = imgNum;
     el->header.sizes = new uint32_t[imgNum];
+    el->header.imgNames = new string[imgNum];
+
+    for (int i = 0; i < imgNum; i++)
+        el->header.imgNames[i] = imgsPath[i];
 
     el->imgs = new ECIImg[imgNum];
 
@@ -140,4 +161,15 @@ uint8_t *ImgResizeData(const uint8_t *img_data, const uint32_t imgSize)
     img->channels = c;
 
     return data;
+}
+
+string fileSizeToName(const uint32_t fileSize)
+{
+    int i = log(fileSize) / log(1024);
+    int p = pow(1024, i);
+    string siz = to_string(fileSize / (float)p);
+
+    const char *sizes[] = {"B", "KB", "MB", "GB"};
+    siz += sizes[i];
+    return siz;
 }
