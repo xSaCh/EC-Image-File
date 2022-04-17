@@ -63,6 +63,11 @@
         "sstream": "cpp",
         "*.tcc": "cpp",
         "array": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "cwctype": "cpp",
+        "deque": "cpp",
+        "memory_resource": "cpp",
+        "optional": "cpp",
+        "filesystem": "cpp"
     }
 }

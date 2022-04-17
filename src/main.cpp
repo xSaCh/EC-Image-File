@@ -13,7 +13,7 @@
 #include "stb_image_resize.h"
 
 //Width of Img after Resize
-#define RESIZE_WIDTH 256
+//#define RESIZE_WIDTH 256
 
 using namespace std;
 
@@ -22,7 +22,7 @@ ECIImg img[2];
 
 // EL el;
 ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile);
-uint8_t *ImgResizeData(const uint8_t *img_data, const uint32_t imgSize);
+uint8_t *ImgResizeData(const int resizeWidth, const uint8_t *img_data, const uint32_t imgSize);
 string fileSizeToName(const uint32_t fileSize);
 
 int main(int argc, char *args[])
@@ -44,7 +44,7 @@ int main(int argc, char *args[])
                 return 1;
             }
 
-            cout << head.imgNames[0] << '\n';
+            cout << nn->w << '\n';
             ofstream f(outFile, ios::binary);
             f.write((char *)nn->data, head.sizes[pos]);
             f.close();
@@ -53,7 +53,8 @@ int main(int argc, char *args[])
         {
             char *inpFile = args[2];
             int pos = atoi(args[3]);
-            char *outFile = args[4];
+	    int r_width = atoi(args[4]);
+            char *outFile = args[5];
 
             //Read  args[3]
             ECIHeader head;
@@ -64,9 +65,9 @@ int main(int argc, char *args[])
                 return 1;
             }
 
-            uint8_t *reData = ImgResizeData(nn->data, head.sizes[pos]);
+            uint8_t *reData = ImgResizeData(r_width,nn->data, head.sizes[pos]);
 
-            float scale = (RESIZE_WIDTH / (float)nn->w);
+            float scale = (r_width / (float)nn->w);
             stbi_write_jpg(((string) "resize_" + outFile).c_str(), nn->w * scale, nn->h * scale, nn->channels, reData, 50);
         }
         else if (strcmp(args[1], "-f") == 0)
@@ -76,11 +77,14 @@ int main(int argc, char *args[])
             char *outFile = args[4];
 
             ECI *eci = ECI::Read(inpFile, true);
+
+            cout << "Total Images: " << eci->header.numbers << '\n';
             for (int i = 0; i < eci->header.numbers; i++)
             {
                 string s = fileSizeToName(eci->header.sizes[i]);
-                printf("%i) %s = W:%i H:%i C:%i Size:%s\n", i, eci->header.imgNames[i].c_str(), eci->imgs[i].w,
-                       eci->imgs[i].h, eci->imgs[i].channels, s.c_str());
+
+                printf("\n%i) %s := W:%i H:%i C:%i Size:%s\n", i, eci->header.imgNames[i].c_str(),
+                       eci->imgs[i].w, eci->imgs[i].h, eci->imgs[i].channels, s.c_str());
             }
         }
         else if (strcmp(args[1], "-w") == 0)
@@ -113,14 +117,11 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile)
     el->header.sizes = new uint32_t[imgNum];
     el->header.imgNames = new string[imgNum];
 
-    for (int i = 0; i < imgNum; i++)
-        el->header.imgNames[i] = imgsPath[i];
-
     el->imgs = new ECIImg[imgNum];
 
     for (int nI = 0; nI < imgNum; nI++)
     {
-        cout << "LOADING " << imgsPath[nI] << "...\n";
+        cout << "LOADING " << imgsPath[nI].c_str() << "...\n";
         int data = stbi_info(imgsPath[nI].c_str(), &(el->imgs[nI].w), &(el->imgs[nI].h), &(el->imgs[nI].channels));
 
         ifstream refil(imgsPath[nI].c_str(), ios::binary | ios::ate);
@@ -133,17 +134,18 @@ ECI *WriteEl(int imgNum, const string imgsPath[], const char *outFile)
 
         el->imgs[nI].data = d;
         el->header.sizes[nI] = siz;
+        el->header.imgNames[nI] = imgsPath[nI].substr(imgsPath[nI].find_last_of("/\\") + 1);
     }
     el->Write(outFile);
     return el;
 }
 
-uint8_t *ImgResizeData(const uint8_t *img_data, const uint32_t imgSize)
+uint8_t *ImgResizeData(const int resizeWidth, const uint8_t *img_data, const uint32_t imgSize)
 {
     int x, y, c;
     uint8_t *imdDa = stbi_load_from_memory(img_data, imgSize, &x, &y, &c, 0);
 
-    float scale = RESIZE_WIDTH / (float)x;
+    float scale = resizeWidth/ (float)x;
 
     uint8_t *data = (uint8_t *)malloc(sizeof(uint8_t) * x * y * c * scale);
 
